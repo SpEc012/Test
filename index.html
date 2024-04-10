@@ -14,7 +14,7 @@
 
         .container {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 20px auto;
             padding: 20px;
             background-color: #fff;
             border-radius: 8px;
@@ -51,27 +51,34 @@
             margin-top: 20px;
         }
 
-        .embed-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            margin-top: 20px;
+        .result {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
 
-        .embed-container iframe {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 0;
+        .result h2 {
+            margin-top: 0;
         }
 
-        .season-selector {
+        .result p {
+            margin-bottom: 10px;
+        }
+
+        .season-selection {
+            display: none;
             margin-top: 10px;
         }
 
-        .season-selector select {
+        .season-selection label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .season-selection select {
             padding: 5px;
-            font-size: 16px;
+            border: 1px solid #ccc;
             border-radius: 5px;
         }
     </style>
@@ -79,100 +86,147 @@
 <body>
     <div class="container">
         <h1>Movie and TV Show Tool</h1>
-        <input type="text" id="searchInput" placeholder="Search for a movie or TV show">
-        <button onclick="search()">Search</button>
-        <div id="results"></div>
+        <div id="movieSearch">
+            <h2>Search Movies</h2>
+            <input type="text" id="movieSearchInput" placeholder="Search for a movie">
+            <button onclick="searchMovies()">Search</button>
+            <div id="movieResults"></div>
+        </div>
+
+        <div id="tvShowSearch">
+            <h2>Search TV Shows</h2>
+            <input type="text" id="tvShowSearchInput" placeholder="Search for a TV show">
+            <button onclick="searchTvShows()">Search</button>
+            <div id="tvShowResults"></div>
+        </div>
+
+        <div id="seasonSelection" class="season-selection">
+            <label for="seasonSelect">Select Season:</label>
+            <select id="seasonSelect"></select>
+            <label for="episodeSelect">Select Episode:</label>
+            <select id="episodeSelect"></select>
+            <button onclick="watchTvShow()">Watch</button>
+        </div>
     </div>
 
     <script>
-        function search() {
-            const apiKey = "f02c83f8b232c28647e6a0abcc0d2ef5";
-            const searchInput = document.getElementById("searchInput").value.trim();
+function searchMovies() {
+    const query = document.getElementById("movieSearchInput").value.trim();
+    if (query === "") {
+        alert("Please enter a movie title.");
+        return;
+    }
 
-            if (searchInput === "") {
-                alert("Please enter a movie or TV show title to search.");
-                return;
-            }
+    // Clear previous search results
+    document.getElementById("movieResults").innerHTML = "";
 
-            const searchUrl = `https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&language=en-US&query=${searchInput}&page=1&include_adult=false`;
+    // Fetch movie data from TMDB API
+    fetch(`https://api.themoviedb.org/3/search/movie?query=${query}&api_key=YOUR_TMDB_API_KEY`)
+        .then(response => response.json())
+        .then(data => {
+            displayMovieResults(data.results);
+        })
+        .catch(error => {
+            console.error("Error searching movies:", error);
+        });
+}
 
-            fetch(searchUrl)
-                .then(response => response.json())
-                .then(data => {
-                    displayResults(data);
-                })
-                .catch(error => {
-                    console.error("Error fetching data:", error);
-                });
-        }
+function displayMovieResults(results) {
+    const movieResultsContainer = document.getElementById("movieResults");
 
-        function displayResults(data) {
-            const resultsDiv = document.getElementById("results");
-            resultsDiv.innerHTML = ""; // Clear previous results
+    if (results.length === 0) {
+        movieResultsContainer.innerHTML = "<p>No movies found.</p>";
+        return;
+    }
 
-            if (data.results.length === 0) {
-                resultsDiv.innerText = "No results found.";
-                return;
-            }
+    results.forEach(movie => {
+        const movieDiv = document.createElement("div");
+        movieDiv.classList.add("result");
 
-            // Display search results
-            data.results.forEach(result => {
-                const type = result.media_type; // 'movie' or 'tv'
-                const id = result.id;
+        const title = `<h2>${movie.title}</h2>`;
+        const overview = `<p>${movie.overview}</p>`;
+        const watchButton = `<button onclick="watchMovie(${movie.id})">Watch</button>`;
 
-                const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=f02c83f8b232c28647e6a0abcc0d2ef5`;
+        movieDiv.innerHTML = title + overview + watchButton;
+        movieResultsContainer.appendChild(movieDiv);
+    });
+}
 
-                fetch(detailsUrl)
-                    .then(response => response.json())
-                    .then(details => {
-                        const title = details.title || details.name;
-                        const overview = details.overview;
-                        const releaseDate = details.release_date || details.first_air_date;
+function searchTvShows() {
+    const query = document.getElementById("tvShowSearchInput").value.trim();
+    if (query === "") {
+        alert("Please enter a TV show title.");
+        return;
+    }
 
-                        const resultDiv = document.createElement("div");
-                        resultDiv.innerHTML = `<h2>${title}</h2>
-                                                <p>${overview}</p>
-                                                <p>Release Date: ${releaseDate}</p>`;
+    // Clear previous search results
+    document.getElementById("tvShowResults").innerHTML = "";
 
-                        if (type === 'tv') {
-                            const seasons = details.number_of_seasons;
-                            const seasonSelector = document.createElement("div");
-                            seasonSelector.classList.add("season-selector");
-                            seasonSelector.innerHTML = `<label for="seasonSelect">Select Season:</label>
-                                                        <select id="seasonSelect${id}" onchange="loadEpisodes('${type}', ${id}, this.value)">
-                                                            ${generateSeasonOptions(seasons)}
-                                                        </select>`;
-                            resultDiv.appendChild(seasonSelector);
-                        }
+    // Fetch TV show data from TMDB API
+    fetch(`https://api.themoviedb.org/3/search/tv?query=${query}&api_key=YOUR_TMDB_API_KEY`)
+        .then(response => response.json())
+        .then(data => {
+            displayTvShowResults(data.results);
+        })
+        .catch(error => {
+            console.error("Error searching TV shows:", error);
+        });
+}
 
-                        resultsDiv.appendChild(resultDiv);
-                    })
-                    .catch(error => {
-                        console.error("Error fetching details:", error);
-                    });
+function displayTvShowResults(results) {
+    const tvShowResultsContainer = document.getElementById("tvShowResults");
+
+    if (results.length === 0) {
+        tvShowResultsContainer.innerHTML = "<p>No TV shows found.</p>";
+        return;
+    }
+
+    results.forEach(tvShow => {
+        const tvShowDiv = document.createElement("div");
+        tvShowDiv.classList.add("result");
+
+        const title = `<h2>${tvShow.name}</h2>`;
+        const overview = `<p>${tvShow.overview}</p>`;
+        const watchButton = `<button onclick="selectSeason(${tvShow.id})">Watch</button>`;
+
+        tvShowDiv.innerHTML = title + overview + watchButton;
+        tvShowResultsContainer.appendChild(tvShowDiv);
+    });
+}
+
+function selectSeason(tvShowId) {
+    // Fetch TV show details from TMDB API
+    fetch(`https://api.themoviedb.org/3/tv/${tvShowId}?api_key=YOUR_TMDB_API_KEY`)
+        .then(response => response.json())
+        .then(data => {
+            const seasons = data.seasons;
+            const seasonSelect = document.getElementById("seasonSelect");
+
+            // Populate season dropdown
+            seasons.forEach(season => {
+                const option = document.createElement("option");
+                option.value = season.season_number;
+                option.text = `Season ${season.season_number}`;
+                seasonSelect.appendChild(option);
             });
-        }
 
-        function generateSeasonOptions(seasons) {
-            let options = '';
-            for (let i = 1; i <= seasons; i++) {
-                options += `<option value="${i}">Season ${i}</option>`;
-            }
-            return options;
-        }
+            // Show season selection
+            document.getElementById("seasonSelection").style.display = "block";
+        })
+        .catch(error => {
+            console.error("Error fetching TV show details:", error);
+        });
+}
 
-        function loadEpisodes(type, id, seasonNumber) {
-            const episodesUrl = `https://api.themoviedb.org/3/${type}/${id}/season/${seasonNumber}?api_key=f02c83f8b232c28647e6a0abcc0d2ef5`;
+function watchTvShow() {
+    const tvShowId = document.getElementById("tvShowId").value;
+    const seasonNumber = document.getElementById("seasonSelect").value;
+    const episodeNumber = document.getElementById("episodeSelect").value;
 
-            fetch(episodesUrl)
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data); // You can handle episodes data here
-                })
-                .catch(error => {
-                    console.error("Error fetching episodes:", error);
-                });
-        }
+    // Redirect to SUSFLIX TV show embed URL with selected season and episode
+    window.location.href = `https://susflix.tv/api/embed/tv?id=${tvShowId}&s=${seasonNumber}&e=${episodeNumber}&key=YOUR_SUSFLIX_API_KEY`;
+}
+
     </script>
 </body>
 </html>
