@@ -65,20 +65,14 @@
             border: 0;
         }
 
-        .seasons-container {
-            margin-top: 20px;
+        .season-selector {
+            margin-top: 10px;
         }
 
-        .season {
-            margin-bottom: 10px;
-        }
-
-        .season h3 {
-            margin-bottom: 5px;
-        }
-
-        .episodes {
-            padding-left: 20px;
+        .season-selector select {
+            padding: 5px;
+            font-size: 16px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -138,8 +132,18 @@
                         const resultDiv = document.createElement("div");
                         resultDiv.innerHTML = `<h2>${title}</h2>
                                                 <p>${overview}</p>
-                                                <p>Release Date: ${releaseDate}</p>
-                                                <button onclick="watch('${type}', ${id})">Watch</button>`;
+                                                <p>Release Date: ${releaseDate}</p>`;
+
+                        if (type === 'tv') {
+                            const seasons = details.number_of_seasons;
+                            const seasonSelector = document.createElement("div");
+                            seasonSelector.classList.add("season-selector");
+                            seasonSelector.innerHTML = `<label for="seasonSelect">Select Season:</label>
+                                                        <select id="seasonSelect${id}" onchange="loadEpisodes('${type}', ${id}, this.value)">
+                                                            ${generateSeasonOptions(seasons)}
+                                                        </select>`;
+                            resultDiv.appendChild(seasonSelector);
+                        }
 
                         resultsDiv.appendChild(resultDiv);
                     })
@@ -149,51 +153,25 @@
             });
         }
 
-        function watch(type, id) {
-            const apiKey = "f02c83f8b232c28647e6a0abcc0d2ef5";
-            const seasonsUrl = `https://api.themoviedb.org/3/${type}/${id}/seasons?api_key=${apiKey}`;
-
-            fetch(seasonsUrl)
-                .then(response => response.json())
-                .then(data => {
-                    displaySeasons(data, type, id);
-                })
-                .catch(error => {
-                    console.error("Error fetching seasons:", error);
-                });
+        function generateSeasonOptions(seasons) {
+            let options = '';
+            for (let i = 1; i <= seasons; i++) {
+                options += `<option value="${i}">Season ${i}</option>`;
+            }
+            return options;
         }
 
-        function displaySeasons(data, type, id) {
-            const resultsDiv = document.getElementById("results");
-            resultsDiv.innerHTML = ""; // Clear previous results
+        function loadEpisodes(type, id, seasonNumber) {
+            const episodesUrl = `https://api.themoviedb.org/3/${type}/${id}/season/${seasonNumber}?api_key=f02c83f8b232c28647e6a0abcc0d2ef5`;
 
-            const seasonsContainer = document.createElement("div");
-            seasonsContainer.classList.add("seasons-container");
-
-            data.forEach(season => {
-                const seasonDiv = document.createElement("div");
-                seasonDiv.classList.add("season");
-
-                const seasonNumber = season.season_number;
-                const episodes = season.episode_count;
-
-                const seasonHeader = document.createElement("h3");
-                seasonHeader.textContent = `Season ${seasonNumber}`;
-                seasonDiv.appendChild(seasonHeader);
-
-                const episodesList = document.createElement("ul");
-                episodesList.classList.add("episodes");
-                for (let i = 1; i <= episodes; i++) {
-                    const episodeItem = document.createElement("li");
-                    episodeItem.textContent = `Episode ${i}`;
-                    episodesList.appendChild(episodeItem);
-                }
-                seasonDiv.appendChild(episodesList);
-
-                seasonsContainer.appendChild(seasonDiv);
-            });
-
-            resultsDiv.appendChild(seasonsContainer);
+            fetch(episodesUrl)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // You can handle episodes data here
+                })
+                .catch(error => {
+                    console.error("Error fetching episodes:", error);
+                });
         }
     </script>
 </body>
