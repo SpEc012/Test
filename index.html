@@ -64,6 +64,22 @@
             height: 100%;
             border: 0;
         }
+
+        .seasons-container {
+            margin-top: 20px;
+        }
+
+        .season {
+            margin-bottom: 10px;
+        }
+
+        .season h3 {
+            margin-bottom: 5px;
+        }
+
+        .episodes {
+            padding-left: 20px;
+        }
     </style>
 </head>
 <body>
@@ -105,49 +121,79 @@
                 return;
             }
 
-            // Display the first result (movie or TV show)
-            const result = data.results[0];
-            const type = result.media_type; // 'movie' or 'tv'
-            const id = result.id;
+            // Display search results
+            data.results.forEach(result => {
+                const type = result.media_type; // 'movie' or 'tv'
+                const id = result.id;
 
-            const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=f02c83f8b232c28647e6a0abcc0d2ef5`;
+                const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=f02c83f8b232c28647e6a0abcc0d2ef5`;
 
-            fetch(detailsUrl)
-                .then(response => response.json())
-                .then(details => {
-                    const title = details.title || details.name;
-                    const overview = details.overview;
-                    const releaseDate = details.release_date || details.first_air_date;
+                fetch(detailsUrl)
+                    .then(response => response.json())
+                    .then(details => {
+                        const title = details.title || details.name;
+                        const overview = details.overview;
+                        const releaseDate = details.release_date || details.first_air_date;
 
-                    const resultDiv = document.createElement("div");
-                    resultDiv.innerHTML = `<h2>${title}</h2>
-                                            <p>${overview}</p>
-                                            <p>Release Date: ${releaseDate}</p>
-                                            <button onclick="watch('${type}', ${id})">Watch</button>`;
+                        const resultDiv = document.createElement("div");
+                        resultDiv.innerHTML = `<h2>${title}</h2>
+                                                <p>${overview}</p>
+                                                <p>Release Date: ${releaseDate}</p>
+                                                <button onclick="watch('${type}', ${id})">Watch</button>`;
 
-                    resultsDiv.appendChild(resultDiv);
-                })
-                .catch(error => {
-                    console.error("Error fetching details:", error);
-                });
+                        resultsDiv.appendChild(resultDiv);
+                    })
+                    .catch(error => {
+                        console.error("Error fetching details:", error);
+                    });
+            });
         }
 
         function watch(type, id) {
-            const embedUrl = `https://susflix.tv/api/embed/${type}?id=${id}`;
+            const apiKey = "f02c83f8b232c28647e6a0abcc0d2ef5";
+            const seasonsUrl = `https://api.themoviedb.org/3/${type}/${id}/seasons?api_key=${apiKey}`;
 
-            const iframe = document.createElement("iframe");
-            iframe.setAttribute("src", embedUrl);
-            iframe.setAttribute("frameborder", "0");
-            iframe.setAttribute("allowfullscreen", "true");
-            iframe.setAttribute("class", "embed-responsive-item");
+            fetch(seasonsUrl)
+                .then(response => response.json())
+                .then(data => {
+                    displaySeasons(data, type, id);
+                })
+                .catch(error => {
+                    console.error("Error fetching seasons:", error);
+                });
+        }
 
-            const embedContainer = document.createElement("div");
-            embedContainer.setAttribute("class", "embed-container");
-            embedContainer.appendChild(iframe);
-
+        function displaySeasons(data, type, id) {
             const resultsDiv = document.getElementById("results");
             resultsDiv.innerHTML = ""; // Clear previous results
-            resultsDiv.appendChild(embedContainer);
+
+            const seasonsContainer = document.createElement("div");
+            seasonsContainer.classList.add("seasons-container");
+
+            data.forEach(season => {
+                const seasonDiv = document.createElement("div");
+                seasonDiv.classList.add("season");
+
+                const seasonNumber = season.season_number;
+                const episodes = season.episode_count;
+
+                const seasonHeader = document.createElement("h3");
+                seasonHeader.textContent = `Season ${seasonNumber}`;
+                seasonDiv.appendChild(seasonHeader);
+
+                const episodesList = document.createElement("ul");
+                episodesList.classList.add("episodes");
+                for (let i = 1; i <= episodes; i++) {
+                    const episodeItem = document.createElement("li");
+                    episodeItem.textContent = `Episode ${i}`;
+                    episodesList.appendChild(episodeItem);
+                }
+                seasonDiv.appendChild(episodesList);
+
+                seasonsContainer.appendChild(seasonDiv);
+            });
+
+            resultsDiv.appendChild(seasonsContainer);
         }
     </script>
 </body>
