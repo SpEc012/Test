@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie and TV Show Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #results {
+            margin-top: 20px;
+        }
+
+        .embed-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            margin-top: 20px;
+        }
+
+        .embed-container iframe {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Movie and TV Show Tool</h1>
+        <input type="text" id="searchInput" placeholder="Search for a movie or TV show">
+        <button onclick="search()">Search</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function search() {
+            const apiKey = "f02c83f8b232c28647e6a0abcc0d2ef5";
+            const searchInput = document.getElementById("searchInput").value.trim();
+
+            if (searchInput === "") {
+                alert("Please enter a movie or TV show title to search.");
+                return;
+            }
+
+            const searchUrl = `https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&language=en-US&query=${searchInput}&page=1&include_adult=false`;
+
+            fetch(searchUrl)
+                .then(response => response.json())
+                .then(data => {
+                    displayResults(data);
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                });
+        }
+
+        function displayResults(data) {
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = ""; // Clear previous results
+
+            if (data.results.length === 0) {
+                resultsDiv.innerText = "No results found.";
+                return;
+            }
+
+            // Display the first result (movie or TV show)
+            const result = data.results[0];
+            const type = result.media_type; // 'movie' or 'tv'
+            const id = result.id;
+
+            const detailsUrl = `https://api.themoviedb.org/3/${type}/${id}?api_key=f02c83f8b232c28647e6a0abcc0d2ef5`;
+
+            fetch(detailsUrl)
+                .then(response => response.json())
+                .then(details => {
+                    const title = details.title || details.name;
+                    const overview = details.overview;
+                    const releaseDate = details.release_date || details.first_air_date;
+
+                    const resultDiv = document.createElement("div");
+                    resultDiv.innerHTML = `<h2>${title}</h2>
+                                            <p>${overview}</p>
+                                            <p>Release Date: ${releaseDate}</p>
+                                            <button onclick="watch('${type}', ${id})">Watch</button>`;
+
+                    resultsDiv.appendChild(resultDiv);
+                })
+                .catch(error => {
+                    console.error("Error fetching details:", error);
+                });
+        }
+
+        function watch(type, id) {
+            const embedUrl = `https://susflix.tv/api/embed/${type}?id=${id}`;
+
+            const iframe = document.createElement("iframe");
+            iframe.setAttribute("src", embedUrl);
+            iframe.setAttribute("frameborder", "0");
+            iframe.setAttribute("allowfullscreen", "true");
+            iframe.setAttribute("class", "embed-responsive-item");
+
+            const embedContainer = document.createElement("div");
+            embedContainer.setAttribute("class", "embed-container");
+            embedContainer.appendChild(iframe);
+
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = ""; // Clear previous results
+            resultsDiv.appendChild(embedContainer);
+        }
+    </script>
+</body>
+</html>
