@@ -121,7 +121,7 @@ function searchMovies() {
     document.getElementById("movieResults").innerHTML = "";
 
     // Fetch movie data from TMDB API
-    fetch(`https://api.themoviedb.org/3/search/movie?query=${query}&api_key=YOUR_TMDB_API_KEY`)
+    fetch(`https://api.themoviedb.org/3/search/movie?query=${query}&api_key=e9cb8d153178715870518f39a6e50b74`)
         .then(response => response.json())
         .then(data => {
             displayMovieResults(data.results);
@@ -163,7 +163,7 @@ function searchTvShows() {
     document.getElementById("tvShowResults").innerHTML = "";
 
     // Fetch TV show data from TMDB API
-    fetch(`https://api.themoviedb.org/3/search/tv?query=${query}&api_key=YOUR_TMDB_API_KEY`)
+    fetch(`https://api.themoviedb.org/3/search/tv?query=${query}&api_key=e9cb8d153178715870518f39a6e50b74`)
         .then(response => response.json())
         .then(data => {
             displayTvShowResults(data.results);
@@ -196,7 +196,7 @@ function displayTvShowResults(results) {
 
 function selectSeason(tvShowId) {
     // Fetch TV show details from TMDB API
-    fetch(`https://api.themoviedb.org/3/tv/${tvShowId}?api_key=YOUR_TMDB_API_KEY`)
+    fetch(`https://api.themoviedb.org/3/tv/${tvShowId}?api_key=e9cb8d153178715870518f39a6e50b74`)
         .then(response => response.json())
         .then(data => {
             const seasons = data.seasons;
@@ -224,7 +224,7 @@ function watchTvShow() {
     const episodeNumber = document.getElementById("episodeSelect").value;
 
     // Redirect to SUSFLIX TV show embed URL with selected season and episode
-    window.location.href = `https://susflix.tv/api/embed/tv?id=${tvShowId}&s=${seasonNumber}&e=${episodeNumber}&key=YOUR_SUSFLIX_API_KEY`;
+    window.location.href = `https://susflix.tv/api/embed/tv?id=${tvShowId}&s=${seasonNumber}&e=${episodeNumber}&key=wrfDkcKnw4TCksKy`;
 }
 
     </script>
