@@ -254,6 +254,11 @@
             const seasonNumber = document.getElementById("seasonSelect").value;
             const episodeNumber = document.getElementById("episodeSelect").value;
 
+            if (!episodeNumber) {
+                alert("Please select an episode.");
+                return;
+            }
+
             // Redirect to SUSFLIX TV show embed URL with selected season and episode
             window.location.href = `https://susflix.tv/api/embed/tv?id=${tvShowId}&s=${seasonNumber}&e=${episodeNumber}&key=wrfDkcKnw4TCksKy`;
         }
