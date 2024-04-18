@@ -47,10 +47,6 @@
             background-color: #0056b3;
         }
 
-        #results {
-            margin-top: 20px;
-        }
-
         .result {
             margin-bottom: 20px;
             padding: 10px;
@@ -102,7 +98,7 @@
 
         <div id="seasonSelection" class="season-selection">
             <label for="seasonSelect">Select Season:</label>
-            <select id="seasonSelect"></select>
+            <select id="seasonSelect" onchange="selectEpisode()"></select>
             <label for="episodeSelect">Select Episode:</label>
             <select id="episodeSelect"></select>
             <button onclick="watchTvShow()">Watch</button>
@@ -110,123 +106,152 @@
     </div>
 
     <script>
-function searchMovies() {
-    const query = document.getElementById("movieSearchInput").value.trim();
-    if (query === "") {
-        alert("Please enter a movie title.");
-        return;
-    }
+        function searchMovies() {
+            const query = document.getElementById("movieSearchInput").value.trim();
+            if (query === "") {
+                alert("Please enter a movie title.");
+                return;
+            }
 
-    // Clear previous search results
-    document.getElementById("movieResults").innerHTML = "";
+            // Clear previous search results
+            document.getElementById("movieResults").innerHTML = "";
 
-    // Fetch movie data from TMDB API
-    fetch(`https://api.themoviedb.org/3/search/movie?query=${query}&api_key=e9cb8d153178715870518f39a6e50b74`)
-        .then(response => response.json())
-        .then(data => {
-            displayMovieResults(data.results);
-        })
-        .catch(error => {
-            console.error("Error searching movies:", error);
-        });
-}
+            // Fetch movie data from TMDB API
+            fetch(`https://api.themoviedb.org/3/search/movie?query=${query}&api_key=e9cb8d153178715870518f39a6e50b74`)
+                .then(response => response.json())
+                .then(data => {
+                    displayMovieResults(data.results);
+                })
+                .catch(error => {
+                    console.error("Error searching movies:", error);
+                });
+        }
 
-function displayMovieResults(results) {
-    const movieResultsContainer = document.getElementById("movieResults");
+        function displayMovieResults(results) {
+            const movieResultsContainer = document.getElementById("movieResults");
 
-    if (results.length === 0) {
-        movieResultsContainer.innerHTML = "<p>No movies found.</p>";
-        return;
-    }
+            if (results.length === 0) {
+                movieResultsContainer.innerHTML = "<p>No movies found.</p>";
+                return;
+            }
 
-    results.forEach(movie => {
-        const movieDiv = document.createElement("div");
-        movieDiv.classList.add("result");
+            results.forEach(movie => {
+                const movieDiv = document.createElement("div");
+                movieDiv.classList.add("result");
 
-        const title = `<h2>${movie.title}</h2>`;
-        const overview = `<p>${movie.overview}</p>`;
-        const watchButton = `<button onclick="watchMovie(${movie.id})">Watch</button>`;
+                const title = `<h2>${movie.title}</h2>`;
+                const overview = `<p>${movie.overview}</p>`;
+                const watchButton = `<button onclick="watchMovie(${movie.id})">Watch</button>`;
 
-        movieDiv.innerHTML = title + overview + watchButton;
-        movieResultsContainer.appendChild(movieDiv);
-    });
-}
-
-function searchTvShows() {
-    const query = document.getElementById("tvShowSearchInput").value.trim();
-    if (query === "") {
-        alert("Please enter a TV show title.");
-        return;
-    }
-
-    // Clear previous search results
-    document.getElementById("tvShowResults").innerHTML = "";
-
-    // Fetch TV show data from TMDB API
-    fetch(`https://api.themoviedb.org/3/search/tv?query=${query}&api_key=e9cb8d153178715870518f39a6e50b74`)
-        .then(response => response.json())
-        .then(data => {
-            displayTvShowResults(data.results);
-        })
-        .catch(error => {
-            console.error("Error searching TV shows:", error);
-        });
-}
-
-function displayTvShowResults(results) {
-    const tvShowResultsContainer = document.getElementById("tvShowResults");
-
-    if (results.length === 0) {
-        tvShowResultsContainer.innerHTML = "<p>No TV shows found.</p>";
-        return;
-    }
-
-    results.forEach(tvShow => {
-        const tvShowDiv = document.createElement("div");
-        tvShowDiv.classList.add("result");
-
-        const title = `<h2>${tvShow.name}</h2>`;
-        const overview = `<p>${tvShow.overview}</p>`;
-        const watchButton = `<button onclick="selectSeason(${tvShow.id})">Watch</button>`;
-
-        tvShowDiv.innerHTML = title + overview + watchButton;
-        tvShowResultsContainer.appendChild(tvShowDiv);
-    });
-}
-
-function selectSeason(tvShowId) {
-    // Fetch TV show details from TMDB API
-    fetch(`https://api.themoviedb.org/3/tv/${tvShowId}?api_key=e9cb8d153178715870518f39a6e50b74`)
-        .then(response => response.json())
-        .then(data => {
-            const seasons = data.seasons;
-            const seasonSelect = document.getElementById("seasonSelect");
-
-            // Populate season dropdown
-            seasons.forEach(season => {
-                const option = document.createElement("option");
-                option.value = season.season_number;
-                option.text = `Season ${season.season_number}`;
-                seasonSelect.appendChild(option);
+                movieDiv.innerHTML = title + overview + watchButton;
+                movieResultsContainer.appendChild(movieDiv);
             });
+        }
 
-            // Show season selection
-            document.getElementById("seasonSelection").style.display = "block";
-        })
-        .catch(error => {
-            console.error("Error fetching TV show details:", error);
-        });
-}
+        function searchTvShows() {
+            const query = document.getElementById("tvShowSearchInput").value.trim();
+            if (query === "") {
+                alert("Please enter a TV show title.");
+                return;
+            }
 
-function watchTvShow() {
-    const tvShowId = document.getElementById("tvShowId").value;
-    const seasonNumber = document.getElementById("seasonSelect").value;
-    const episodeNumber = document.getElementById("episodeSelect").value;
+            // Clear previous search results
+            document.getElementById("tvShowResults").innerHTML = "";
 
-    // Redirect to SUSFLIX TV show embed URL with selected season and episode
-    window.location.href = `https://susflix.tv/api/embed/tv?id=${tvShowId}&s=${seasonNumber}&e=${episodeNumber}&key=wrfDkcKnw4TCksKy`;
-}
+            // Fetch TV show data from TMDB API
+            fetch(`https://api.themoviedb.org/3/search/tv?query=${query}&api_key=e9cb8d153178715870518f39a6e50b74`)
+                .then(response => response.json())
+                .then(data => {
+                    displayTvShowResults(data.results);
+                })
+                .catch(error => {
+                    console.error("Error searching TV shows:", error);
+                });
+        }
 
+        function displayTvShowResults(results) {
+            const tvShowResultsContainer = document.getElementById("tvShowResults");
+
+            if (results.length === 0) {
+                tvShowResultsContainer.innerHTML = "<p>No TV shows found.</p>";
+                return;
+            }
+
+            results.forEach(tvShow => {
+                const tvShowDiv = document.createElement("div");
+                tvShowDiv.classList.add("result");
+
+                const title = `<h2>${tvShow.name}</h2>`;
+                const overview = `<p>${tvShow.overview}</p>`;
+                const watchButton = `<button onclick="selectSeason(${tvShow.id})">Watch</button>`;
+
+                tvShowDiv.innerHTML = title + overview + watchButton;
+                tvShowResultsContainer.appendChild(tvShowDiv);
+            });
+        }
+
+        function selectSeason(tvShowId) {
+            // Fetch TV show details from TMDB API
+            fetch(`https://api.themoviedb.org/3/tv/${tvShowId}?api_key=e9cb8d153178715870518f39a6e50b74`)
+                .then(response => response.json())
+                .then(data => {
+                    const seasons = data.seasons;
+                    const seasonSelect = document.getElementById("seasonSelect");
+
+                    // Clear previous options
+                    seasonSelect.innerHTML = "";
+
+                    // Populate season dropdown
+                    seasons.forEach(season => {
+                        const option = document.createElement("option");
+                        option.value = season.season_number;
+                        option.text = `Season ${season.season_number}`;
+                        seasonSelect.appendChild(option);
+                    });
+
+                    // Show season selection
+                    document.getElementById("seasonSelection").style.display = "block";
+                })
+                .catch(error => {
+                    console.error("Error fetching TV show details:", error);
+                });
+        }
+
+        function selectEpisode() {
+            const tvShowId = document.getElementById("tvShowSearchInput").value.trim();
+            const seasonNumber = document.getElementById("seasonSelect").value;
+
+            // Fetch episode data for the selected season
+            fetch(`https://api.themoviedb.org/3/tv/${tvShowId}/season/${seasonNumber}?api_key=e9cb8d153178715870518f39a6e50b74`)
+                .then(response => response.json())
+                .then(data => {
+                    const episodes = data.episodes;
+                    const episodeSelect = document.getElementById("episodeSelect");
+
+                    // Clear previous options
+                    episodeSelect.innerHTML = "";
+
+                    // Populate episode dropdown
+                    episodes.forEach(episode => {
+                        const option = document.createElement("option");
+                        option.value = episode.episode_number;
+                        option.text = `Episode ${episode.episode_number}: ${episode.name}`;
+                        episodeSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching episode data:", error);
+                });
+        }
+
+        function watchTvShow() {
+            const tvShowId = document.getElementById("tvShowSearchInput").value.trim();
+            const seasonNumber = document.getElementById("seasonSelect").value;
+            const episodeNumber = document.getElementById("episodeSelect").value;
+
+            // Redirect to SUSFLIX TV show embed URL with selected season and episode
+            window.location.href = `https://susflix.tv/api/embed/tv?id=${tvShowId}&s=${seasonNumber}&e=${episodeNumber}&key=wrfDkcKnw4TCksKy`;
+        }
     </script>
 </body>
 </html>
